@@ -11,19 +11,20 @@ export const LoginPage = () => {
   const toast = useToast()
 
   const signup = async () => {
-    
-    if (!form.email || !form.pass) return toast({status: 'warning', title: 'Erro', description: 'Preencha email e senha'})
-    if (form.pass.length < 6) return toast({status: 'warning', title: 'Erro', description: 'Use senha de pelo menos 6 caracteres'})
+
+    if (!form.email || !form.pass) return toast({ status: 'warning', title: 'Erro', description: 'Preencha email e senha' })
+    if (form.pass.length < 6) return toast({ status: 'warning', title: 'Erro', description: 'Use senha de pelo menos 6 caracteres' })
 
     const { data, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.pass,
     })
 
-    if (error) return toast({status: 'error', title: 'Erro', description: 'Erro ao cadastrar'})
+    if (error) return toast({ status: 'error', title: 'Erro', description: 'Erro ao cadastrar' })
+
     if (data) {
       setIndex(0)
-      return toast({status: 'success', title: 'OK', description: 'Cadastro Realizado'})
+      return toast({ status: 'success', title: 'OK', description: 'Cadastro Realizado' })
     }
   }
 
@@ -34,11 +35,29 @@ export const LoginPage = () => {
       password: form.pass,
     })
 
-    if (error) return toast({status: 'error', title: 'Erro', description: 'Erro ao entrar'})
+    if (error?.message === 'Email not confirmed') return toast({ 
+      status: 'error', title: 'Erro', description: 'Email não confirmado' 
+    })
+
+    if (error?.message === 'Invalid login credentials') return toast({ 
+      status: 'error', title: 'Erro', description: 'Email ou senha incorretos' 
+    })
+
+    if (error) return toast({ 
+      status: 'error', title: 'Erro', description: 'Erro ao entrar' 
+    })
+
     if (data) {
+      console.log(JSON.stringify(data))
+
+      await supabase.from('profiles').insert({
+        id: data.user?.id,
+        first_name: form.email.substring(0, 10)
+      })
+      
       localStorage.setItem('access_token', data.session?.access_token || '')
       router.push('/')
-      return toast({status: 'success', title: 'OK', description: 'Login Realizado'})
+      return toast({ status: 'success', title: 'OK', description: 'Login Realizado' })
     }
   }
 
